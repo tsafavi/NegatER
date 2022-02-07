@@ -1,0 +1,10 @@
+dataset:
+  path: data/conceptnet/true-neg/
+  name: conceptnet/true-neg/
+
+fine_tune:
+  train:
+    negative_sampling:
+      sampler: precomputed
+      precomputed: 
+        negative_file: configs/conceptnet/true-neg/rotate-sa/negatives.tsv

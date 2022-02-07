@@ -1,0 +1,223 @@
+# Default configuration options for all jobs.
+# Any specified configuration options in job-specific config
+# files will overwrite the options in this file.
+
+
+# Options specific to this job.
+job:
+  # The device to run the job on. Should be one of {cuda,cpu}
+  device: cuda
+
+# Options specific to the dataset for fine-tuning
+dataset:
+  path: data/conceptnet/full
+
+  # Pretokenize the KB triples and save to dataset.triples_tokenized_path
+  pretokenize_triples: False
+
+  # Pretokenize the KB phrases and save to dataset.phrases_tokenized_path
+  pretokenize_phrases: False
+
+  # Subdirectory of tokenized triples/IDs/masks, under main data directory
+  triples_tokenized_path: triples_tokenized/
+
+  # Subdirectory of tokenized phrases/IDs/masks, under main data directory
+  phrases_tokenized_path: phrases_tokenized/
+
+# Options for fine-tuning and testing a transformers language model.
+fine_tune:
+
+  model: 
+    # We experimented with:
+    # - bert-base-uncased
+    # - roberta-base
+    # - sentence-transformers/bert-base-nli-cls-token
+    # - sentence-transformers/bert-base-nli-mean-tokens 
+    # - sentence-transformers/bert-base-nli-max-tokens 
+    # - sentence-transformers/roberta-base-nli-stsb-mean-tokens 
+    # See https://huggingface.co/transformers/v3.0.2/pretrained_models.html and
+    # https://huggingface.co/sentence-transformers for names
+    pretrained_name: sentence-transformers/bert-base-nli-mean-tokens
+
+    # The pooling strategy for representing triples.
+    # Choices: {cls,mean,max}
+    pool_strategy: mean
+
+    # The maximum length of sequences (triples) to be fed to the model.
+    max_seq_len: 32
+
+  # Options for the training part of fine-tuning
+  train:
+
+    # The number of fine-tuning epochs.
+    n_epochs: 3
+
+    # The size of batches for fine-tuning.
+    batch_size: 16
+
+    # The learning rate. NOTE: Adam is the only optimizer currently supported.
+    lr: !!float 2e-5
+
+    # The value of epsilon for Adam.
+    eps: !!float 1e-8
+
+    # The number of warmup steps for the scheduler.
+    warmup_steps: 10000
+
+    # Set to True to save a checkpoint from each epoch of training
+    # with the name checkpoint_{000x}.pt.
+    save_all_epochs: False
+
+    # The checkpoint name for the best-performing model at validation time,
+    # e.g., checkpoint_{fine_tune.train.best_checkpoint}.pt
+    best_checkpoint: best
+
+    # Options specific to how negative samples are selected during fine-tuning.
+    negative_sampling:
+      
+      # Each entry tells the sampler how many times per positive we should corrupt
+      # the head/relation/tail slot.
+      nsamp:
+        head: 1
+        relation: 0
+        tail: 0
+
+      # The negative sampler type can be one of:
+      # {uniform,slots,simple-neg,antonyms,sans,precomputed}
+      #   - uniform corrupts the head/relation/tail slots by sampling uniformly at random.
+      #   - slots corrupts the head/tail slots by sampling from phrases that appear for the
+      #     given relation in the KB.
+      #   - simple-neg prepends a "not" token to the head/tail phrases.
+      #   - antonyms replaces the first verb (for verb phrases), noun (for noun phrases),
+      #     or adjective (for adjective phrases) in the sequence with a randomly selected
+      #     antonym, as provided by a precomputed antonym dictionary
+      #   - sans uses the pre-computed k-hop matrices from the SANS method, detailed in
+      #     https://www.aclweb.org/anthology/2020.emnlp-main.492.pdf.
+      #   - precomputed loads negatives from a file and uses them in conjunction with a 
+      #     base sampler if there aren't enough precomputed negatives per epoch
+      sampler: uniform
+
+      # Files needed for antonym-based negative sampling
+      antonyms:
+
+        # Maps tokens to their antonyms.
+        # We provide a dictionary constructed from WordNet and the lexical contrast dataset from 
+        # https://www.ims.uni-stuttgart.de/en/research/resources/experiment-data/lexical-contrast-dataset/
+        mapping_file: configs/conceptnet/true-neg/antonyms/antonyms_gold.json
+
+        # Maps each phrase in the KB to its tokenization.
+        # Our dictionary uses the tokenizations provided by SpaCy's part-of-speech tagger.
+        token_file: configs/conceptnet/true-neg/antonyms/tokenized_phrases.json
+
+        # Maps each phrase in the KB to an integer index indicating the first token
+        # (in the tokenized version of the phrase) to be replaced by its antonym.
+        # If no such token exists, the tag index is -1. 
+        # Our provided tag dictionary uses the SpaCy tokenizations from above,
+        # and tags the first verb in the phrase (for verb phrases),
+        # the first noun in the phrase (for noun phrases), and the first
+        # adjective in the phrase (for adjective phrases). 
+        tag_file: configs/conceptnet/true-neg/antonyms/tags.json
+
+      # Files needed for SANS sampling
+      sans:
+        # The kmat file for sans can be generated with the code provided by the authors:
+        # https://github.com/kahrabian/SANS. 
+        # Here we provide a k-hop matrix for k=2 on our ConceptNet dataset.
+        kmat_file: configs/conceptnet/true-neg/sans/matrix_ConceptNet_k2_nrw0.npz
+
+      # Files needed for sampling from a set of precomputed negatives (e.g., NegatER, self-adversarial)
+      precomputed:
+        
+        # The TSV file of negative samples
+        negative_file: configs/conceptnet/true-neg/negater-thresholds/negatives.tsv
+
+  # Options for the evaluation stage of fine-tuning
+  eval:
+
+    # Batch size for scoring
+    batch_size: 100
+
+    # If True, set a separate decision threshold per relation during validation that
+    # maximizes validation accuracy.
+    # If False, set a global decision threshold during validation that maximizes
+    # validation accuracy.
+    threshold_per_relation: True
+
+    # The name of the checkpoint that we want to test on, i.e.,
+    # checkpoint_{eval.test_checkpoint}.pt
+    test_checkpoint: best
+
+    # If True, save the true and predicted labels of each test instance to a TSV file.
+    save_predictions: true
+
+
+# Options specific to the NegatER negative generation framework.
+negater:
+
+  # Batch size for training and computing embeddings
+  batch_size: 16
+
+  # Options for the k-nearest-neighbors index built in the first step of NegatER
+  index:
+
+    # Should we build a new nearest-neighbor index?
+    build: True
+
+    # The "k" in k-NN
+    k: 10
+
+    # Should we save the index?
+    save: True
+
+    # The type of model to generate sequence embeddings
+    model:
+      # SentenceBert model names here: https://huggingface.co/sentence-transformers
+      pretrained_name: sentence-transformers/bert-base-nli-mean-tokens
+
+      # The pooling strategy for representing sequences
+      # Choices: {cls,mean,max}
+      # Note that if SentenceBert is used, the pooling strategy should match
+      # whatever the model was trained to optimize
+      pool_strategy: mean
+
+    # The maximum length of sequences (phrases from the KB) to be fed to the model.
+      max_seq_len: 16
+
+  # The fine-tuned model that will be mined for negative knowledge in the second step of NegatER
+  fine_tuned_model:
+
+    # The checkpoint to load the model from
+    filename: configs/conceptnet/full/classify/checkpoint_bert_best.pt
+
+    # Specifications of the model
+    pretrained_name: bert-base-uncased
+
+    # The pooling strategy for representing negative candidates
+    # Choices: {cls,mean,max}
+    pool_strategy: cls
+
+    # The maximum length of sequences (negative candidates) to be fed to the model.
+    max_seq_len: 32
+
+  # Options for the "proxy" approach for the NegatER-$\nabla$ ranking method
+  # learns to predict the magnitude of the gradients.
+  proxy:
+
+    # The hidden dimension of the network (two layers)
+    d2: 100
+
+    # The dropout probability
+    dropout: !!float 0.1
+
+    init:
+
+      # The number of features (true gradient magnitudes) to train on
+      steps: 20000
+
+    train:
+
+      # The number of proxy training epochs
+      epochs: 100
+
+      # The learning rate. Note that only the Adam optimizer is currently supported
+      lr: !!float 1e-5

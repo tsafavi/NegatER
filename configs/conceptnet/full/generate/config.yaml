@@ -1,0 +1,8 @@
+negater:
+  fine_tuned_model: 
+    filename: configs/conceptnet/full/classify/checkpoint_bert_best.pt
+
+  index:
+    build: False
+    k: 20
+    filename: configs/conceptnet/full/generate/top_20_index_sbert.json

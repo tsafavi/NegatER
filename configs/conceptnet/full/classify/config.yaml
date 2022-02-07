@@ -1,0 +1,14 @@
+fine_tune:
+  train:
+    n_epochs: 13
+
+    negative_sampling:
+      nsamp:
+        head: 1
+        relation: 1
+        tail: 1
+
+    best_checkpoint: bert_best_2
+
+  eval:
+    test_checkpoint: bert_best_2

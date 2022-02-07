@@ -1,0 +1,16 @@
+.ipynb_checkpoints/
+__pycache__/
+checkpoints/
+.vscode
+*.pt
+notebooks/
+*.log
+local/
+samples/
+run.sh
+myenv/
+*.tsv
+!negatives.tsv
+*.ipynb
+.DS_Store
+*.pyc

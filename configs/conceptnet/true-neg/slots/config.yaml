@@ -1,0 +1,7 @@
+dataset:
+  path: data/conceptnet/true-neg/
+
+fine_tune:
+  train:
+    negative_sampling:
+      sampler: slots
