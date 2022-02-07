@@ -1,7 +1,23 @@
 # README.md
 
-This repository contains the data and PyTorch implementation of the anonymous 
-submission _NegatER: Generating Negatives in Commonsense Knowledge Bases by Mining Language Models._
+This repository contains the data and PyTorch implementation of the EMNLP 2021 paper _NegatER: Generating Negatives in Commonsense Knowledge Bases by Mining Language Models_ by Tara Safavi, Jing Zhu, and Danai Koutra.
+
+If you use our work, please cite us as follows:
+```
+@inproceedings{safavi-etal-2021-negater,
+    title = "{N}egat{ER}: {U}nsupervised {D}iscovery of {N}egatives in {C}ommonsense {K}nowledge {B}ases",
+    author = "Safavi, Tara  and
+      Zhu, Jing  and
+      Koutra, Danai",
+    booktitle = "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing",
+    month = nov,
+    year = "2021",
+    address = "Online and Punta Cana, Dominican Republic",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2021.emnlp-main.456",
+    pages = "5633--5646",
+}
+```
 
 ## Quick start
 
