@@ -1,6 +1,0 @@
-0	IsA
-1	HasA
-2	CapableOf
-3	HasProperty
-4	Desires
-5	MadeOf
